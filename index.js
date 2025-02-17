@@ -54,6 +54,7 @@ app.post('/render', async (req, res) => {
       serveUrl: bundled,
       codec: 'h264',
       outputLocation,
+      durationInFrames, // Ajout de la durée au niveau racine
       browserTimeout: 180000,
       chromiumOptions: {
         timeout: 180000,
@@ -79,9 +80,13 @@ app.post('/render', async (req, res) => {
       imageFormat: 'jpeg',
       pixelFormat: 'yuv420p',
       inputProps: {
+        durationInFrames, // La durée doit être avant images et config
         images,
-        durationInFrames, // Ajout de la durée calculée
-        ...config
+        musicUrl: config.musicUrl || null,
+        showAddress: config.showAddress || false,
+        showPrice: config.showPrice || false,
+        showDetails: config.showDetails || false,
+        showAgent: config.showAgent || false,
       },
     });
 
