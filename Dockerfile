@@ -1,7 +1,13 @@
-FROM node:18-bullseye-slim
+FROM ubuntu:22.04
+
+# Éviter les prompts interactifs pendant l'installation
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Installation des dépendances système nécessaires
 RUN apt-get update && apt-get install -y \
+    curl \
+    nodejs \
+    npm \
     libnss3 \
     libatk1.0-0 \
     libatk-bridge2.0-0 \
@@ -35,5 +41,5 @@ COPY . .
 # Configuration de Xvfb pour le rendu hors écran
 ENV DISPLAY=:99
 
-# Script de démarrage
-CMD Xvfb :99 -screen 0 1280x720x24 & npm start
+# Script de démarrage avec nettoyage du lock file
+CMD rm -f /tmp/.X99-lock && Xvfb :99 -screen 0 1280x720x24 & npm start
