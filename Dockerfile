@@ -1,6 +1,6 @@
-FROM node:18-slim
+FROM node:18-bullseye-slim
 
-# Installer les dépendances nécessaires pour Chromium/Thorium
+# Installation des dépendances système nécessaires
 RUN apt-get update && apt-get install -y \
     libnss3 \
     libatk1.0-0 \
@@ -15,13 +15,24 @@ RUN apt-get update && apt-get install -y \
     libgbm1 \
     libpango-1.0-0 \
     libcairo2 \
+    libxtst6 \
+    libfreetype6 \
+    libx11-6 \
+    xvfb \
+    libxss1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
+# Installation des dépendances Node.js
 COPY package*.json ./
 RUN npm install
 
+# Copie du reste du code
 COPY . .
 
-CMD ["npm", "start"]
+# Configuration de Xvfb pour le rendu hors écran
+ENV DISPLAY=:99
+
+# Script de démarrage
+CMD Xvfb :99 -screen 0 1280x720x24 & npm start
