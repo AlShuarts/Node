@@ -13,13 +13,27 @@ const Root: React.FC = () => {
     showAgent: false,
   };
 
+  // Paramètres de base
+  const fps = 30;
+  const secondsPerImage = 3;
+  const minImages = 1;  // Pour éviter une durée de 0
+  
+  // Calcul de la durée en frames
+  const calculateDuration = (numberOfImages: number) => {
+    const imageCount = Math.max(numberOfImages, minImages);
+    return imageCount * secondsPerImage * fps;
+  };
+
+  // Durée par défaut pour les props vides (au moins 3 secondes)
+  const defaultDuration = calculateDuration(1);
+
   return (
     <>
       <Composition
         id="modern"
         component={ModernSlideshow}
-        durationInFrames={300}
-        fps={30}
+        durationInFrames={defaultDuration}
+        fps={fps}
         width={1920}
         height={1080}
         defaultProps={defaultProps}
@@ -27,8 +41,8 @@ const Root: React.FC = () => {
       <Composition
         id="fade"
         component={FadeSlideshow}
-        durationInFrames={300}
-        fps={30}
+        durationInFrames={defaultDuration}
+        fps={fps}
         width={1920}
         height={1080}
         defaultProps={defaultProps}
