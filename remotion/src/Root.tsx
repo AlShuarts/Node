@@ -36,7 +36,11 @@ const Root: React.FC = () => {
         fps={fps}
         width={1920}
         height={1080}
-        defaultProps={defaultProps}
+        defaultProps={{
+          ...defaultProps,
+          durationInFrames, // Ajouter ceci
+        }}
+      
       />
       <Composition
         id="fade"
@@ -45,7 +49,10 @@ const Root: React.FC = () => {
         fps={fps}
         width={1920}
         height={1080}
-        defaultProps={defaultProps}
+        defaultProps={{
+          ...defaultProps,
+          durationInFrames, // Ajouter ceci
+        }}
       />
     </>
   );
