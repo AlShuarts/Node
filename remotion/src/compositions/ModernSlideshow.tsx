@@ -11,7 +11,7 @@ export const ModernSlideshow: React.FC<SlideshowProps> = ({
   showAgent,
 }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps, durationInFrames, width, height } = useVideoConfig();
   const [handle] = useState(() => delayRender());
   const [imagesLoaded, setImagesLoaded] = useState(false);
 
@@ -28,7 +28,7 @@ export const ModernSlideshow: React.FC<SlideshowProps> = ({
       return;
     }
 
-    const LOAD_TIMEOUT = 15000; // 15 secondes
+    const LOAD_TIMEOUT = 30000; // 30 secondes
     let loadedCount = 0;
     let errorCount = 0;
     let isMounted = true;
@@ -119,6 +119,8 @@ export const ModernSlideshow: React.FC<SlideshowProps> = ({
                 height: '100%',
                 objectFit: 'contain',
               }}
+              pixelFormat="yuv420p"
+              imageFormat="jpeg"
             />
           </div>
         );
