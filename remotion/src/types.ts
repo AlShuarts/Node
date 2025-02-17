@@ -6,4 +6,5 @@ export interface SlideshowProps {
   showPrice?: boolean;
   showDetails?: boolean;
   showAgent?: boolean;
+  durationInFrames?: number;
 }
