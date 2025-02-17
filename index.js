@@ -13,7 +13,7 @@ app.post('/render', async (req, res) => {
     
     // Configuration du bundler
     const bundled = await bundle({
-      entryPoint: path.join(process.cwd(), './src/index.ts'),
+      entryPoint: path.join(process.cwd(), './remotion/src/Root.tsx'),
       // Augmenter le timeout si nécessaire
       timeout: 60000,
     });
