@@ -11,6 +11,10 @@ const upload = multer({ dest: os.tmpdir() });
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+// Ajoutez cette route avant app.post('/render')
+app.get('/', (req, res) => {
+  res.json({ status: 'Remotion render service is running' });
+});
 
 app.post('/render', async (req, res) => {
   try {
