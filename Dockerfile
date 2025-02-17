@@ -3,11 +3,18 @@ FROM ubuntu:22.04
 # Éviter les prompts interactifs pendant l'installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Installation des dépendances système nécessaires
+# Installation de curl et des dépendances pour Node.js
 RUN apt-get update && apt-get install -y \
     curl \
+    ca-certificates \
+    gnupg
+
+# Ajout du repository NodeSource pour Node.js 18
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+
+# Installation de Node.js 18 et des autres dépendances
+RUN apt-get install -y \
     nodejs \
-    npm \
     libnss3 \
     libatk1.0-0 \
     libatk-bridge2.0-0 \
@@ -28,6 +35,9 @@ RUN apt-get update && apt-get install -y \
     libxss1 \
     libasound2 \
     && rm -rf /var/lib/apt/lists/*
+
+# Vérification de la version de Node.js
+RUN node --version
 
 WORKDIR /app
 
