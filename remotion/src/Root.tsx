@@ -1,10 +1,9 @@
-
-import { Composition } from 'remotion';
+import { Composition, registerRoot } from 'remotion';
 import { ModernSlideshow } from './compositions/ModernSlideshow';
 import { FadeSlideshow } from './compositions/FadeSlideshow';
 import { SlideshowProps } from './types';
 
-export const Root: React.FC = () => {
+const Root: React.FC = () => {
   const defaultProps: SlideshowProps = {
     images: [],
     musicUrl: null,
@@ -37,3 +36,5 @@ export const Root: React.FC = () => {
     </>
   );
 };
+
+registerRoot(Root);
