@@ -38,9 +38,8 @@ const Root: React.FC = () => {
         height={1080}
         defaultProps={{
           ...defaultProps,
-          durationInFrames, // Ajouter ceci
+          durationInFrames, // Ajouter la durée aux props
         }}
-      
       />
       <Composition
         id="fade"
@@ -51,7 +50,7 @@ const Root: React.FC = () => {
         height={1080}
         defaultProps={{
           ...defaultProps,
-          durationInFrames, // Ajouter ceci
+          durationInFrames, // Ajouter la durée aux props
         }}
       />
     </>
