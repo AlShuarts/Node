@@ -24,23 +24,49 @@ export const ModernSlideshow: React.FC<SlideshowProps> = ({
   // Précharger toutes les images
   useEffect(() => {
     let loadedCount = 0;
+    let errorCount = 0;
+    let isMounted = true;
+
+    // Timeout de sécurité de 25 secondes
+    const timeoutId = setTimeout(() => {
+      console.log('Loading timeout reached, continuing render');
+      if (isMounted) {
+        setImagesLoaded(true);
+        continueRender(handle);
+      }
+    }, 25000);
+
+    const checkComplete = () => {
+      if (loadedCount + errorCount === images.length && isMounted) {
+        clearTimeout(timeoutId);
+        setImagesLoaded(true);
+        continueRender(handle);
+        console.log(`Loading complete: ${loadedCount} loaded, ${errorCount} failed`);
+      }
+    };
+
     const imageElements = images.map((src) => {
       const img = new Image();
       img.src = src;
+      
       img.onload = () => {
         loadedCount++;
-        if (loadedCount === images.length) {
-          setImagesLoaded(true);
-          continueRender(handle);
-        }
+        console.log(`Image loaded ${loadedCount}/${images.length}: ${src}`);
+        checkComplete();
       };
+
       img.onerror = (error) => {
+        errorCount++;
         console.error('Error loading image:', src, error);
+        checkComplete();
       };
+
       return img;
     });
 
     return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
       imageElements.forEach((img) => {
         img.onload = null;
         img.onerror = null;
