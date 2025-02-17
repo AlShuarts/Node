@@ -1,84 +1,78 @@
 import express from 'express';
-import multer from 'multer';
 import { bundle } from '@remotion/bundler';
-import { renderFrames, stitchFramesToVideo } from '@remotion/renderer';
-import { getCompositions } from '@remotion/renderer';
-import os from 'os';
+import { getCompositions, renderMedia } from '@remotion/renderer';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Fix __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const upload = multer({ dest: os.tmpdir() });
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 
 app.use(express.json());
-// Ajoutez cette route avant app.post('/render')
+
+// Route de test
 app.get('/', (req, res) => {
   res.json({ status: 'Remotion render service is running' });
 });
 
+// Route principale pour le rendu
 app.post('/render', async (req, res) => {
   try {
     const { images, config } = req.body;
+    
+    console.log('Received render request with:', { 
+      imageCount: images?.length,
+      config 
+    });
 
-    if (!images || !Array.isArray(images)) {
-      return res.status(400).json({ error: 'Images array is required' });
+    // Valider les entrées
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      return res.status(400).json({ error: 'Invalid images array' });
     }
 
-    console.log('Starting render with images:', images.length);
-
-    const bundleLocation = await bundle({
-      entryPoint: path.join(process.cwd(), 'remotion', 'src', 'Root.tsx'),
+    // Créer le bundle Remotion
+    const bundled = await bundle(path.join(__dirname, 'remotion', 'src', 'Root.tsx'), {
       webpackOverride: (config) => config,
     });
 
-    const compositions = await getCompositions(bundleLocation);
-    const composition = compositions.find((c) => c.id === 'Slideshow');
+    const compositions = await getCompositions(bundled);
+    const composition = compositions.find((c) => c.id === 'modern');
 
     if (!composition) {
-      return res.status(404).json({ error: 'Composition not found' });
+      console.error('Available compositions:', compositions.map(c => c.id));
+      throw new Error('Could not find modern composition');
     }
 
-    const outputDir = path.join(os.tmpdir(), 'frames');
-    const outputLocation = path.join(os.tmpdir(), 'output.mp4');
+    console.log('Starting video render with composition:', composition.id);
 
-    const inputProps = {
-      images,
-      config,
-    };
-
-    await renderFrames({
-      config: composition,
-      webpackBundle: bundleLocation,
-      onStart: () => console.log('Starting frame rendering...'),
-      onFrameUpdate: (f) => console.log(`Rendered frame ${f}`),
-      inputProps,
-      outputDir,
-      imageFormat: "jpeg",
-      concurrency: 1,
-      durationInFrames: composition.durationInFrames,
-      fps: composition.fps,
+    // Rendre la vidéo
+    const videoData = await renderMedia({
+      composition,
+      serveUrl: bundled,
+      codec: 'h264',
+      outputLocation: null,
+      inputProps: {
+        images,
+        ...config
+      },
     });
 
-    console.log('Frames rendered, stitching video...');
+    console.log('Video rendering complete, sending response');
 
-    const videoFile = await stitchFramesToVideo({
-      dir: outputDir,
-      fps: composition.fps,
-      width: composition.width,
-      height: composition.height,
-      outputLocation,
-      imageFormat: "jpeg",
-      codec: "h264",
-    });
+    // Envoyer la vidéo
+    res.set('Content-Type', 'video/mp4');
+    res.send(videoData);
 
-    console.log('Video rendered:', outputLocation);
-    res.sendFile(outputLocation);
-  } catch (error) {
-    console.error('Error rendering video:', error);
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error('Error rendering video:', err);
+    res.status(500).json({ error: `Error rendering video: ${err.message}` });
   }
 });
 
-app.listen(port, () => {
+// Important pour Railway : écouter sur toutes les interfaces
+app.listen(port, '0.0.0.0', () => {
   console.log(`Render service listening on port ${port}`);
 });
