@@ -23,17 +23,19 @@ app.post('/render', async (req, res) => {
   try {
     const { images, config } = req.body;
     
-    console.log('Received render request with:', { 
-      imageCount: images?.length,
-      config 
-    });
-    // AJOUTER ICI : Nettoyer les URLs des images
-    const cleanImages = images?.map(url => url.replace(/;$/, ''));
-    
-    // Valider les entrées
+    // Valider les entrées d'abord
     if (!images || !Array.isArray(images) || images.length === 0) {
       return res.status(400).json({ error: 'Invalid images array' });
     }
+
+    console.log('Received render request with:', { 
+      imageCount: images.length,
+      config 
+    });
+
+    // Nettoyer les URLs des images
+    const cleanImages = images.map(url => url.replace(/;$/, ''));
+    console.log('Cleaned image URLs, first image:', cleanImages[0]);
 
     // Créer le bundle Remotion avec la configuration améliorée
     const bundleConfiguration = {
@@ -55,9 +57,11 @@ app.post('/render', async (req, res) => {
 
     console.log('Starting bundle process...');
     const bundled = await bundle(bundleConfiguration);
-
+    console.log('Bundle completed successfully');
 
     const compositions = await getCompositions(bundled);
+    console.log('Found compositions:', compositions.map(c => c.id).join(', '));
+    
     const composition = compositions.find((c) => c.id === 'modern');
 
     if (!composition) {
@@ -86,14 +90,13 @@ app.post('/render', async (req, res) => {
     res.send(videoData);
 
   } catch (err) {
-  console.error('Detailed error:', err);
-  res.status(500).json({ 
-    error: 'Render failed', 
-    details: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-  });
-}
-
+    console.error('Detailed error:', err);
+    res.status(500).json({ 
+      error: 'Render failed', 
+      details: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
 });
 
 // Important pour Railway : écouter sur toutes les interfaces
