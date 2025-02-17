@@ -23,11 +23,7 @@ app.post('/render', async (req, res) => {
           optimization: {
             ...config.optimization,
             minimize: true,
-            splitChunks: {
-              chunks: 'all',
-              minSize: 10000,
-              maxSize: 250000
-            }
+          
           }
         };
       }
