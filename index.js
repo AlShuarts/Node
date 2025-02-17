@@ -13,6 +13,13 @@ app.post('/render', async (req, res) => {
     
     console.log('Starting render process with', images.length, 'images');
     
+    // Calcul de la durée basée sur le nombre d'images
+    const fps = 30;
+    const secondsPerImage = 3;
+    const durationInFrames = images.length * secondsPerImage * fps;
+    
+    console.log('Calculated duration:', durationInFrames, 'frames for', images.length, 'images');
+    
     // Configuration du bundler avec options étendues et optimisations
     const bundled = await bundle({
       entryPoint: path.join(process.cwd(), './remotion/src/Root.tsx'),
@@ -23,7 +30,6 @@ app.post('/render', async (req, res) => {
           optimization: {
             ...config.optimization,
             minimize: true,
-          
           }
         };
       }
@@ -74,6 +80,7 @@ app.post('/render', async (req, res) => {
       pixelFormat: 'yuv420p',
       inputProps: {
         images,
+        durationInFrames, // Ajout de la durée calculée
         ...config
       },
     });
