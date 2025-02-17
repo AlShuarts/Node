@@ -9,6 +9,7 @@ export const ModernSlideshow: React.FC<SlideshowProps> = ({
   showPrice,
   showDetails,
   showAgent,
+  durationInFrames,
 }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames, width, height } = useVideoConfig();
