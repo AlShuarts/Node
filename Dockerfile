@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
     libx11-6 \
     xvfb \
     libxss1 \
-    libasound2 \     # Ajout de la bibliothèque audio manquante
+    libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
