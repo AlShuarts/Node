@@ -11,20 +11,29 @@ app.post('/render', async (req, res) => {
   try {
     const { images, config } = req.body;
     
-    // Configuration du bundler avec options étendues
+    console.log('Starting render process with', images.length, 'images');
+    
+    // Configuration du bundler avec options étendues et optimisations
     const bundled = await bundle({
       entryPoint: path.join(process.cwd(), './remotion/src/Root.tsx'),
-      timeout: 120000,
+      timeout: 180000,
       webpackOverride: (config) => {
         return {
           ...config,
           optimization: {
             ...config.optimization,
-            minimize: false
+            minimize: true,
+            splitChunks: {
+              chunks: 'all',
+              minSize: 10000,
+              maxSize: 250000
+            }
           }
         };
       }
     });
+
+    console.log('Bundle completed, fetching compositions...');
 
     const compositions = await getCompositions(bundled);
     const composition = compositions.find((c) => c.id === 'modern');
@@ -33,41 +42,70 @@ app.post('/render', async (req, res) => {
       throw new Error('Composition not found');
     }
 
+    console.log('Starting media render with composition:', composition.id);
+
     const outputLocation = `/tmp/video.mp4`;
 
-    // Configuration du rendu avec timeouts augmentés et options Chrome étendues
+    // Configuration du rendu avec optimisations de mémoire et performance
     await renderMedia({
       composition,
       serveUrl: bundled,
       codec: 'h264',
       outputLocation,
-      browserTimeout: 120000,
+      browserTimeout: 180000,
       chromiumOptions: {
-        timeout: 120000,
+        timeout: 180000,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-gpu',
           '--disable-web-security',
-          '--disable-features=IsolateOrigins,site-per-process'
+          '--disable-features=IsolateOrigins,site-per-process',
+          '--js-flags=--max-old-space-size=1024',
+          '--memory-pressure-off',
+          '--single-process',
+          '--disable-software-rasterizer'
         ]
       },
+      ffmpegOptions: {
+        vcodec: 'libx264',
+        preset: 'ultrafast',
+        crf: 28,
+        threads: 2
+      },
+      imageFormat: 'jpeg',
+      pixelFormat: 'yuv420p',
       inputProps: {
         images,
         ...config
       },
     });
 
+    console.log('Render completed, sending file...');
+
     // Envoyer la vidéo en réponse
     res.sendFile(outputLocation);
   } catch (error) {
     console.error('Error in render:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+    });
   }
 });
 
-const port = process.env.PORT || 3000;
+// Gestionnaire d'erreurs global
+app.use((error, req, res, next) => {
+  console.error('Unhandled error:', error);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: error.message 
+  });
+});
+
+const port = process.env.PORT || 8080;
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`Render server running on port ${port}`);
+  console.log('Memory limit:', process.env.NODE_OPTIONS || 'default');
 });
