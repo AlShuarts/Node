@@ -1,4 +1,3 @@
-
 import { useCurrentFrame, useVideoConfig, Audio, Img, delayRender, continueRender } from 'remotion';
 import { useEffect, useState } from 'react';
 import { SlideshowProps } from '../types';
@@ -21,20 +20,29 @@ export const ModernSlideshow: React.FC<SlideshowProps> = ({
   const currentImageIndex = Math.floor(frame / framesPerImage) % images.length;
   const transitionProgress = (frame % framesPerImage) / framesPerImage;
 
-  // Précharger toutes les images
+  // Vérification initiale des images
   useEffect(() => {
+    if (!images || images.length === 0) {
+      console.log('No images provided, continuing render immediately');
+      continueRender(handle);
+      return;
+    }
+
+    const LOAD_TIMEOUT = 15000; // 15 secondes
     let loadedCount = 0;
     let errorCount = 0;
     let isMounted = true;
 
-    // Timeout de sécurité de 25 secondes
+    console.log(`Starting to load ${images.length} images...`);
+
+    // Timeout de sécurité
     const timeoutId = setTimeout(() => {
       console.log('Loading timeout reached, continuing render');
       if (isMounted) {
         setImagesLoaded(true);
         continueRender(handle);
       }
-    }, 25000);
+    }, LOAD_TIMEOUT);
 
     const checkComplete = () => {
       if (loadedCount + errorCount === images.length && isMounted) {
@@ -47,7 +55,6 @@ export const ModernSlideshow: React.FC<SlideshowProps> = ({
 
     const imageElements = images.map((src) => {
       const img = new Image();
-      img.src = src;
       
       img.onload = () => {
         loadedCount++;
@@ -61,17 +68,23 @@ export const ModernSlideshow: React.FC<SlideshowProps> = ({
         checkComplete();
       };
 
+      // Définir src après avoir configuré les handlers
+      img.src = src;
       return img;
     });
 
-    return () => {
+    const cleanup = () => {
+      console.log('Cleaning up image loading');
       isMounted = false;
       clearTimeout(timeoutId);
       imageElements.forEach((img) => {
         img.onload = null;
         img.onerror = null;
+        img.src = ''; // Libérer la mémoire
       });
     };
+
+    return cleanup;
   }, [images, handle]);
 
   return (
