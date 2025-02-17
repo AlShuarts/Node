@@ -39,21 +39,24 @@ app.post('/render', async (req, res) => {
 
     // Créer le bundle Remotion avec la configuration améliorée
     const bundleConfiguration = {
-      entryPoint: path.join(__dirname, 'remotion', 'src', 'Root.tsx'),
-      webpackOverride: (config) => {
-        return {
-          ...config,
-          plugins: config.plugins.map(plugin => {
-            if (plugin.constructor.name === 'ProgressPlugin') {
-              return new plugin.constructor({
-                onProgress: () => {} // Fix pour l'erreur onProgress
-              });
+  entryPoint: path.join(__dirname, 'remotion', 'src', 'Root.tsx'),
+  webpackOverride: (config) => {
+    return {
+      ...config,
+      plugins: config.plugins.map(plugin => {
+        if (plugin.constructor.name === 'ProgressPlugin') {
+          return new plugin.constructor({
+            handler: (percentage, message) => {
+              console.log(`Bundle progress: ${Math.round(percentage * 100)}%`);
             }
-            return plugin;
-          })
-        };
-      }
+          });
+        }
+        return plugin;
+      })
     };
+  }
+};
+
 
     console.log('Starting bundle process...');
     const bundled = await bundle(bundleConfiguration);
