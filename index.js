@@ -11,11 +11,19 @@ app.post('/render', async (req, res) => {
   try {
     const { images, config } = req.body;
     
-    // Configuration du bundler
+    // Configuration du bundler avec options étendues
     const bundled = await bundle({
       entryPoint: path.join(process.cwd(), './remotion/src/Root.tsx'),
-      // Augmenter le timeout si nécessaire
-      timeout: 60000,
+      timeout: 120000,
+      webpackOverride: (config) => {
+        return {
+          ...config,
+          optimization: {
+            ...config.optimization,
+            minimize: false
+          }
+        };
+      }
     });
 
     const compositions = await getCompositions(bundled);
@@ -27,19 +35,22 @@ app.post('/render', async (req, res) => {
 
     const outputLocation = `/tmp/video.mp4`;
 
-    // Configuration du rendu avec timeouts augmentés
+    // Configuration du rendu avec timeouts augmentés et options Chrome étendues
     await renderMedia({
       composition,
       serveUrl: bundled,
       codec: 'h264',
       outputLocation,
-      browserTimeout: 60000, // Augmenté à 60 secondes
+      browserTimeout: 120000,
       chromiumOptions: {
-        timeout: 60000,
+        timeout: 120000,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage'
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--disable-web-security',
+          '--disable-features=IsolateOrigins,site-per-process'
         ]
       },
       inputProps: {
