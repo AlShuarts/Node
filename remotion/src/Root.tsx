@@ -24,15 +24,15 @@ const Root: React.FC = () => {
     return imageCount * secondsPerImage * fps;
   };
 
-  // Durée par défaut pour les props vides (au moins 3 secondes)
-  const defaultDuration = calculateDuration(1);
+  // Durée basée sur le nombre d'images dans les props
+  const durationInFrames = calculateDuration(defaultProps.images.length || 5); // Par défaut 5 images = 15 secondes
 
   return (
     <>
       <Composition
         id="modern"
         component={ModernSlideshow}
-        durationInFrames={defaultDuration}
+        durationInFrames={durationInFrames}
         fps={fps}
         width={1920}
         height={1080}
@@ -41,7 +41,7 @@ const Root: React.FC = () => {
       <Composition
         id="fade"
         component={FadeSlideshow}
-        durationInFrames={defaultDuration}
+        durationInFrames={durationInFrames}
         fps={fps}
         width={1920}
         height={1080}
