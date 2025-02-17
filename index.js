@@ -27,16 +27,35 @@ app.post('/render', async (req, res) => {
       imageCount: images?.length,
       config 
     });
-
+    // AJOUTER ICI : Nettoyer les URLs des images
+    const cleanImages = images?.map(url => url.replace(/;$/, ''));
+    
     // Valider les entrées
     if (!images || !Array.isArray(images) || images.length === 0) {
       return res.status(400).json({ error: 'Invalid images array' });
     }
 
-    // Créer le bundle Remotion
-    const bundled = await bundle(path.join(__dirname, 'remotion', 'src', 'Root.tsx'), {
-      webpackOverride: (config) => config,
-    });
+    // Créer le bundle Remotion avec la configuration améliorée
+    const bundleConfiguration = {
+      entryPoint: path.join(__dirname, 'remotion', 'src', 'Root.tsx'),
+      webpackOverride: (config) => {
+        return {
+          ...config,
+          plugins: config.plugins.map(plugin => {
+            if (plugin.constructor.name === 'ProgressPlugin') {
+              return new plugin.constructor({
+                onProgress: () => {} // Fix pour l'erreur onProgress
+              });
+            }
+            return plugin;
+          })
+        };
+      }
+    };
+
+    console.log('Starting bundle process...');
+    const bundled = await bundle(bundleConfiguration);
+
 
     const compositions = await getCompositions(bundled);
     const composition = compositions.find((c) => c.id === 'modern');
@@ -55,7 +74,7 @@ app.post('/render', async (req, res) => {
       codec: 'h264',
       outputLocation: null,
       inputProps: {
-        images,
+        images: cleanImages,
         ...config
       },
     });
@@ -67,9 +86,14 @@ app.post('/render', async (req, res) => {
     res.send(videoData);
 
   } catch (err) {
-    console.error('Error rendering video:', err);
-    res.status(500).json({ error: `Error rendering video: ${err.message}` });
-  }
+  console.error('Detailed error:', err);
+  res.status(500).json({ 
+    error: 'Render failed', 
+    details: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+}
+
 });
 
 // Important pour Railway : écouter sur toutes les interfaces
