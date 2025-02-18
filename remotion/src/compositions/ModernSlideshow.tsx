@@ -12,13 +12,19 @@ export const ModernSlideshow: React.FC<SlideshowProps> = ({
   durationInFrames,
 }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps } = useVideoConfig(); // Ne plus destructurer durationInFrames ici
   const [handle] = useState(() => delayRender());
   const [imagesLoaded, setImagesLoaded] = useState(false);
 
   const secondsPerImage = 3;
   const framesPerImage = secondsPerImage * fps;
-  const currentImageIndex = Math.floor(frame / framesPerImage) % images.length;
+  
+  // Utiliser modulo pour s'assurer que currentImageIndex reste dans les limites
+  const currentImageIndex = Math.min(
+    Math.floor(frame / framesPerImage),
+    images.length - 1
+  );
+  
   const transitionProgress = (frame % framesPerImage) / framesPerImage;
 
   // Vérification initiale des images
@@ -29,14 +35,13 @@ export const ModernSlideshow: React.FC<SlideshowProps> = ({
       return;
     }
 
-    const LOAD_TIMEOUT = 30000; // 30 secondes
+    const LOAD_TIMEOUT = 30000;
     let loadedCount = 0;
     let errorCount = 0;
     let isMounted = true;
 
     console.log(`Starting to load ${images.length} images...`);
 
-    // Timeout de sécurité
     const timeoutId = setTimeout(() => {
       console.log('Loading timeout reached, continuing render');
       if (isMounted) {
@@ -69,24 +74,29 @@ export const ModernSlideshow: React.FC<SlideshowProps> = ({
         checkComplete();
       };
 
-      // Définir src après avoir configuré les handlers
       img.src = src;
       return img;
     });
 
-    const cleanup = () => {
+    return () => {
       console.log('Cleaning up image loading');
       isMounted = false;
       clearTimeout(timeoutId);
       imageElements.forEach((img) => {
         img.onload = null;
         img.onerror = null;
-        img.src = ''; // Libérer la mémoire
+        img.src = '';
       });
     };
-
-    return cleanup;
   }, [images, handle]);
+
+  if (!images || images.length === 0) {
+    return (
+      <div style={{ flex: 1, backgroundColor: 'black', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <p style={{ color: 'white' }}>Aucune image disponible</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ flex: 1, backgroundColor: 'black' }}>
