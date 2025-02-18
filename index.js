@@ -1,4 +1,3 @@
-// Service de rendu Remotion
 import express from 'express';
 import { bundle } from '@remotion/bundler';
 import { renderMedia, getCompositions } from '@remotion/renderer';
@@ -9,19 +8,29 @@ app.use(express.json());
 
 app.post('/render', async (req, res) => {
   try {
-    const { images, config } = req.body;
+    let { images, config } = req.body;
     
-    if (!images || images.length === 0) {
-      throw new Error('No images provided');
-    }
+    // Assurer que images est au moins un tableau vide
+    images = images || [];
     
-    console.log('Starting render process with', images.length, 'images');
-    
+    // Paramètres de base
     const fps = 30;
     const secondsPerImage = 3;
-    const durationInFrames = images.length * secondsPerImage * fps;
+    const minDurationInFrames = fps * secondsPerImage; // 90 frames minimum (3 secondes)
     
-    console.log('Calculated duration:', durationInFrames, 'frames for', images.length, 'images');
+    // Calcul de la durée avec un minimum garanti
+    const durationInFrames = Math.max(images.length * secondsPerImage * fps, minDurationInFrames);
+    
+    // Logs détaillés pour le débogage
+    console.log({
+      numberOfImages: images.length,
+      calculatedDuration: durationInFrames,
+      framesPerImage: secondsPerImage * fps,
+      minimumDuration: minDurationInFrames,
+    });
+    
+    console.log('Starting render process with', images.length, 'images');
+    console.log('Calculated duration:', durationInFrames, 'frames');
     
     const bundled = await bundle({
       entryPoint: path.join(process.cwd(), './remotion/src/Root.tsx'),
@@ -55,7 +64,7 @@ app.post('/render', async (req, res) => {
       serveUrl: bundled,
       codec: 'h264',
       outputLocation,
-      durationInFrames, // Durée totale au niveau racine
+      durationInFrames,
       browserTimeout: 180000,
       chromiumOptions: {
         timeout: 180000,
@@ -81,13 +90,13 @@ app.post('/render', async (req, res) => {
       imageFormat: 'jpeg',
       pixelFormat: 'yuv420p',
       inputProps: {
-        durationInFrames,
         images,
-        musicUrl: config.musicUrl || null,
-        showAddress: config.showAddress || false,
-        showPrice: config.showPrice || false,
-        showDetails: config.showDetails || false,
-        showAgent: config.showAgent || false,
+        durationInFrames,
+        musicUrl: config?.musicUrl || null,
+        showAddress: config?.showAddress || false,
+        showPrice: config?.showPrice || false,
+        showDetails: config?.showDetails || false,
+        showAgent: config?.showAgent || false,
       },
     });
 
