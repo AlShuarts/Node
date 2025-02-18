@@ -11,16 +11,18 @@ app.post('/render', async (req, res) => {
   try {
     const { images, config } = req.body;
     
+    if (!images || images.length === 0) {
+      throw new Error('No images provided');
+    }
+    
     console.log('Starting render process with', images.length, 'images');
     
-    // Calcul de la durée basée sur le nombre d'images
     const fps = 30;
     const secondsPerImage = 3;
     const durationInFrames = images.length * secondsPerImage * fps;
     
     console.log('Calculated duration:', durationInFrames, 'frames for', images.length, 'images');
     
-    // Configuration du bundler avec options étendues et optimisations
     const bundled = await bundle({
       entryPoint: path.join(process.cwd(), './remotion/src/Root.tsx'),
       timeout: 180000,
@@ -48,13 +50,12 @@ app.post('/render', async (req, res) => {
 
     const outputLocation = `/tmp/video.mp4`;
 
-    // Configuration du rendu avec optimisations de mémoire et performance
     await renderMedia({
       composition,
       serveUrl: bundled,
       codec: 'h264',
       outputLocation,
-      durationInFrames, // Ajout de la durée au niveau racine
+      durationInFrames, // Durée totale au niveau racine
       browserTimeout: 180000,
       chromiumOptions: {
         timeout: 180000,
@@ -80,7 +81,7 @@ app.post('/render', async (req, res) => {
       imageFormat: 'jpeg',
       pixelFormat: 'yuv420p',
       inputProps: {
-        durationInFrames, // La durée doit être avant images et config
+        durationInFrames,
         images,
         musicUrl: config.musicUrl || null,
         showAddress: config.showAddress || false,
@@ -92,7 +93,6 @@ app.post('/render', async (req, res) => {
 
     console.log('Render completed, sending file...');
 
-    // Envoyer la vidéo en réponse
     res.sendFile(outputLocation);
   } catch (error) {
     console.error('Error in render:', error);
@@ -103,7 +103,6 @@ app.post('/render', async (req, res) => {
   }
 });
 
-// Gestionnaire d'erreurs global
 app.use((error, req, res, next) => {
   console.error('Unhandled error:', error);
   res.status(500).json({ 
