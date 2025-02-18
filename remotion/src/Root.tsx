@@ -7,54 +7,45 @@ const Root: React.FC = () => {
   // Paramètres de base
   const fps = 30;
   const secondsPerImage = 3;
-  const minDurationInFrames = fps * secondsPerImage; // Durée minimale de 3 secondes
-  
-  // Props par défaut
+  const minDurationInFrames = fps * secondsPerImage; // 90 frames minimum (3 secondes)
+
+  // Pour le développement, utiliser 5 images par défaut
+  const defaultNumberOfImages = 5;
+  const defaultDurationInFrames = Math.max(
+    defaultNumberOfImages * secondsPerImage * fps,
+    minDurationInFrames
+  );
+
+  // Props par défaut pour le développement
   const defaultProps: SlideshowProps = {
-    images: [],
+    images: Array(defaultNumberOfImages).fill('/placeholder.png'), // Utiliser un placeholder pour le dev
     musicUrl: null,
     showAddress: false,
     showPrice: false,
     showDetails: false,
     showAgent: false,
+    durationInFrames: defaultDurationInFrames, // La durée par défaut pour le développement
   };
-
-  // Calcul de la durée en frames avec une durée minimale
-  const calculateDuration = (numberOfImages: number) => {
-    if (numberOfImages === 0) {
-      return minDurationInFrames; // Retourne la durée minimale si pas d'images
-    }
-    return numberOfImages * secondsPerImage * fps;
-  };
-
-  // Durée basée sur le nombre d'images avec un minimum garanti
-  const durationInFrames = calculateDuration(defaultProps.images.length);
 
   return (
     <>
       <Composition
         id="modern"
         component={ModernSlideshow}
-        durationInFrames={durationInFrames}
+        durationInFrames={defaultDurationInFrames}
         fps={fps}
         width={1920}
         height={1080}
-        defaultProps={{
-          ...defaultProps,
-          durationInFrames,
-        }}
+        defaultProps={defaultProps}
       />
       <Composition
         id="fade"
         component={FadeSlideshow}
-        durationInFrames={durationInFrames}
+        durationInFrames={defaultDurationInFrames}
         fps={fps}
         width={1920}
         height={1080}
-        defaultProps={{
-          ...defaultProps,
-          durationInFrames,
-        }}
+        defaultProps={defaultProps}
       />
     </>
   );
