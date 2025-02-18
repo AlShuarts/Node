@@ -12,7 +12,7 @@ export const ModernSlideshow: React.FC<SlideshowProps> = ({
   durationInFrames,
 }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames, width, height } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
   const [handle] = useState(() => delayRender());
   const [imagesLoaded, setImagesLoaded] = useState(false);
 
