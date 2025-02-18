@@ -12,29 +12,44 @@ export const ModernSlideshow: React.FC<SlideshowProps> = ({
   durationInFrames,
 }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig(); // Ne plus destructurer durationInFrames ici
+  const { fps } = useVideoConfig();
   const [handle] = useState(() => delayRender());
   const [imagesLoaded, setImagesLoaded] = useState(false);
 
+  // Vérification immédiate des images avant tout calcul
+  if (!images || images.length === 0) {
+    console.log('No images available for rendering');
+    return (
+      <div style={{ flex: 1, backgroundColor: 'black', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <p style={{ color: 'white' }}>Aucune image disponible</p>
+      </div>
+    );
+  }
+
   const secondsPerImage = 3;
   const framesPerImage = secondsPerImage * fps;
-  
-  // Utiliser modulo pour s'assurer que currentImageIndex reste dans les limites
-  const currentImageIndex = Math.min(
-    Math.floor(frame / framesPerImage),
-    images.length - 1
-  );
-  
-  const transitionProgress = (frame % framesPerImage) / framesPerImage;
+  const totalFrames = images.length * framesPerImage;
 
-  // Vérification initiale des images
+  // Calcul de l'index de l'image courante avec modulo pour boucler
+  const currentFrame = frame % totalFrames;
+  const currentImageIndex = Math.floor(currentFrame / framesPerImage) % images.length;
+  
+  // Calcul de la progression de la transition
+  const transitionProgress = (currentFrame % framesPerImage) / framesPerImage;
+
+  // Log des valeurs pour le débogage
+  console.log({
+    frame,
+    currentFrame,
+    framesPerImage,
+    currentImageIndex,
+    transitionProgress,
+    totalImages: images.length,
+    totalFrames,
+  });
+
+  // Chargement des images
   useEffect(() => {
-    if (!images || images.length === 0) {
-      console.log('No images provided, continuing render immediately');
-      continueRender(handle);
-      return;
-    }
-
     const LOAD_TIMEOUT = 30000;
     let loadedCount = 0;
     let errorCount = 0;
@@ -89,14 +104,6 @@ export const ModernSlideshow: React.FC<SlideshowProps> = ({
       });
     };
   }, [images, handle]);
-
-  if (!images || images.length === 0) {
-    return (
-      <div style={{ flex: 1, backgroundColor: 'black', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <p style={{ color: 'white' }}>Aucune image disponible</p>
-      </div>
-    );
-  }
 
   return (
     <div style={{ flex: 1, backgroundColor: 'black' }}>
