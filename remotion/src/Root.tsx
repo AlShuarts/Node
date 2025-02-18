@@ -16,16 +16,15 @@ const Root: React.FC = () => {
   // Paramètres de base
   const fps = 30;
   const secondsPerImage = 3;
-  const minImages = 1;  // Pour éviter une durée de 0
   
   // Calcul de la durée en frames
   const calculateDuration = (numberOfImages: number) => {
-    const imageCount = Math.max(numberOfImages, minImages);
-    return imageCount * secondsPerImage * fps;
+    // Utiliser le nombre réel d'images, pas de minimum
+    return numberOfImages * secondsPerImage * fps;
   };
 
-  // Durée basée sur le nombre d'images dans les props
-  const durationInFrames = calculateDuration(defaultProps.images.length || 5); // Par défaut 5 images = 15 secondes
+  // Durée basée sur le nombre réel d'images
+  const durationInFrames = calculateDuration(defaultProps.images.length);
 
   return (
     <>
@@ -38,7 +37,7 @@ const Root: React.FC = () => {
         height={1080}
         defaultProps={{
           ...defaultProps,
-          durationInFrames, // Ajouter la durée aux props
+          durationInFrames,
         }}
       />
       <Composition
@@ -50,7 +49,7 @@ const Root: React.FC = () => {
         height={1080}
         defaultProps={{
           ...defaultProps,
-          durationInFrames, // Ajouter la durée aux props
+          durationInFrames,
         }}
       />
     </>
