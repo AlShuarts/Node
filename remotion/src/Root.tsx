@@ -4,6 +4,12 @@ import { FadeSlideshow } from './compositions/FadeSlideshow';
 import { SlideshowProps } from './types';
 
 const Root: React.FC = () => {
+  // Paramètres de base
+  const fps = 30;
+  const secondsPerImage = 3;
+  const minDurationInFrames = fps * secondsPerImage; // Durée minimale de 3 secondes
+  
+  // Props par défaut
   const defaultProps: SlideshowProps = {
     images: [],
     musicUrl: null,
@@ -13,17 +19,15 @@ const Root: React.FC = () => {
     showAgent: false,
   };
 
-  // Paramètres de base
-  const fps = 30;
-  const secondsPerImage = 3;
-  
-  // Calcul de la durée en frames
+  // Calcul de la durée en frames avec une durée minimale
   const calculateDuration = (numberOfImages: number) => {
-    // Utiliser le nombre réel d'images, pas de minimum
+    if (numberOfImages === 0) {
+      return minDurationInFrames; // Retourne la durée minimale si pas d'images
+    }
     return numberOfImages * secondsPerImage * fps;
   };
 
-  // Durée basée sur le nombre réel d'images
+  // Durée basée sur le nombre d'images avec un minimum garanti
   const durationInFrames = calculateDuration(defaultProps.images.length);
 
   return (
